@@ -8,6 +8,7 @@
 %% internal exports
 -on_load(load_nif/0).
 -export([load_nif/0,
+         '_nif_loaded'/0,
          '_nif_unquote'/2,
          '_erl_unquote'/2,
          '_nif_quote'/2,
@@ -15,8 +16,24 @@
          test/0]).
 
 load_nif() ->
-    catch erlang:load_nif("priv/quoted", 0),
+    catch erlang:load_nif(nif_path(), 0),
     ok.
+
+nif_path() ->
+    So = "quoted",
+    case code:priv_dir(quoted) of
+        {error, bad_name} ->
+            case code:which(?MODULE) of
+                File when not is_list(File) -> filename:join("../priv", So);
+                File -> filename:join([filename:dirname(File),"../priv", So])
+            end;
+         Dir ->
+            filename:join(Dir, So)
+    end.
+
+-spec '_nif_loaded'() -> boolean().
+'_nif_loaded'() ->
+    false.
 
 %% Fall back to erlang implementation if the nif can't be loaded
 -spec '_nif_unquote'(string() | binary(), list | binary) -> string() | binary().
@@ -78,7 +95,7 @@ as_binary(String) ->
     '_nif_quote'(String, binary).
 
 
-test(N, Name, Input) ->
+test_decode(N, Name, Input) ->
     Bin = iolist_to_binary(Input),
     Str = binary_to_list(Bin),
     [Name,
@@ -97,21 +114,49 @@ test(N, Name, Input) ->
         timeit(N, fun() -> quoted:'_erl_unquote'(Bin, binary) end)}
     ].
 
+test_encode(N, Name, Input) ->
+    Bin = iolist_to_binary(Input),
+    Str = binary_to_list(Bin),
+    [Name,
+    {test_type, nif_impl, erl_impl},
+    {list_to_list,
+        timeit(N, fun() -> quoted:as_list(Str) end),
+        timeit(N, fun() -> quoted:'_erl_quote'(Str, list) end)},
+    {list_to_bin,
+        timeit(N, fun() -> quoted:as_binary(Str) end),
+        timeit(N, fun() -> quoted:'_erl_quote'(Str, binary) end)},
+    {bin_to_bin,
+        timeit(N, fun() -> quoted:as_binary(Bin) end),
+        timeit(N, fun() -> quoted:'_erl_quote'(Bin, binary) end)},
+    {bin_to_list,
+        timeit(N, fun() -> quoted:as_list(Bin) end),
+        timeit(N, fun() -> quoted:'_erl_quote'(Bin, binary) end)}
+    ].
+
+
+
+
 
 
 test_32b(N) ->
-    test(N, '32B unquoted string', ["a" || _ <- lists:seq(1, 32)]).
+    test_decode(N, 'Decode 32B unquoted string', ["a" || _ <- lists:seq(1, 32)]) ++
+    test_encode(N, 'Encode 32B unquoted string', ["a" || _ <- lists:seq(1, 32)]).
 
 test_1kb(N) ->
-    test(N, '1KB unquoted string', ["a" || _ <- lists:seq(1, 1024)]).
+    test_decode(N, 'Decode 1KB unquoted string', ["a" || _ <- lists:seq(1, 1024)]) ++
+    test_encode(N, 'Encode 1KB unquoted string', ["a" || _ <- lists:seq(1, 1024)]).
 
 test_2kb(N) ->
-    test(N, '2KB quoted string', ["%20" || _ <- lists:seq(1, 2048 div 3)]).
+    test_decode(N, 'Decode 2KB quoted string', ["%20" || _ <- lists:seq(1, 2048 div 3)]) ++
+    test_encode(N, 'Encode 2KB quoted string', [" "   || _ <- lists:seq(1, 2048)]).
 
 test() ->
-    test_32b(10000)
-    ++ test_1kb(10000)
-    ++ test_2kb(10000).
+    R = test_32b(10000)
+    ++  test_1kb(10000)
+    ++  test_2kb(10000),
+    lists:foreach(fun(Res) ->
+        io:format("~w~n", [Res])
+    end, R).
 
 
 timeit(Times, Fun) ->

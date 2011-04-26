@@ -29,6 +29,36 @@ list_inv_prop() ->
         Unquoted == Input
     end).
 
+bin_inv_prop() ->
+    ?FORALL(Initinput, bstring(),
+    begin
+        Input = list_to_binary(Initinput),
+        Quoted = ?q:as_binary(Input),
+        Unquoted = ?q:to_binary(Quoted),
+        Unquoted == Input
+    end).
+
+list_via_bin_inv_prop() ->
+    ?FORALL(Input, bstring(),
+    begin
+        Quoted = ?q:as_binary(Input),
+        Unquoted = ?q:to_list(Quoted),
+        Unquoted == Input
+    end).
+
+bin_via_list_inv_prop() ->
+    ?FORALL(Initinput, bstring(),
+    begin
+        Input = list_to_binary(Initinput),
+        Quoted = ?q:as_list(Input),
+        Unquoted = ?q:to_binary(Quoted),
+        Unquoted == Input
+    end).
+
+
 list_inv_test() -> ?assert(proper:quickcheck(list_inv_prop())).
+bin_inv_test() -> ?assert(proper:quickcheck(bin_inv_prop())).
+list_via_bin_inv_test() -> ?assert(proper:quickcheck(list_via_bin_inv_prop())).
+bin_via_list_inv_test() -> ?assert(proper:quickcheck(bin_via_list_inv_prop())).
 
 -endif.
