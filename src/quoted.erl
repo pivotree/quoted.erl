@@ -214,8 +214,9 @@ quote_list([Char|T]) ->
         true ->
             [Char|quote_list(T)];
         false ->
-            <<H:4, L:4>> = <<Char>>,
-            [$%, tohex(H), tohex(L)|quote_list(T)]
+            HH = tohex(Char bsr 4),
+            HL = tohex(Char band 15),
+            [$%, HH, HL|quote_list(T)]
     end.
 
 
@@ -230,9 +231,8 @@ quote_bin(<<Char, Rest/binary>>, Acc) ->
         true ->
             quote_bin(Rest, <<Acc/binary, Char>>);
         false ->
-            <<H:4, L:4>> = <<Char>>,
-            HH = tohex(H),
-            LH = tohex(L),
+            HH = tohex(Char bsr 4),
+            LH = tohex(Char band 15),
             quote_bin(Rest, <<Acc/binary, $%, HH, LH>>)
     end.
 
