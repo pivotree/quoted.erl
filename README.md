@@ -2,11 +2,10 @@
 
 ## Decoding
 
-    quoted:to_list(iodata()) -> list(byte()).
-    quoted:to_binary(iodata()) -> binary().
-
+    quoted:from_url(binary()) -> binary().
+    quoted:from_url([byte()]) -> [byte()].
 
 ## Encoding
 
-    quoted:as_list(iodata()) -> list(byte()).
-    quoted:as_binary(iodata()) -> binary().
+    quoted:to_url(binary()) -> binary().
+    quoted:to_url([byte()]) -> [byte()].
