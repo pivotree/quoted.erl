@@ -5,6 +5,9 @@
 
 -type data()    :: [byte()] | binary().
 
+
+%% @doc
+%% @end
 -spec to_url(data()) -> data().
 to_url(Str) when is_list(Str) ->
     quote_list_to_list(Str);
@@ -12,6 +15,8 @@ to_url(Bin) when is_binary(Bin) ->
     quote_bin_to_bin(Bin).
 
 
+%% @doc
+%% @end
 -spec from_url(data()) -> data().
 from_url(Str) when is_list(Str) ->
     unquote_list_to_list(Str);
