@@ -166,23 +166,23 @@ ERL_NIF_TERM quote_iolist(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
 }
 
 inline bool is_hex(unsigned char c) {
-    return (c >= 'a' && c <= 'f')
+    return (c >= '0' && c <= '9')
         || (c >= 'A' && c <= 'F')
-        || (c >= '0' && c <= '9');
+        || (c >= 'a' && c <= 'f');
 }
 
 inline bool is_safe(unsigned char c) {
-    return (c == '.') || (c == '-')
-        || (c == '~') || (c == '_')
-        || (c >= 'a' && c <= 'z')
-        || (c >= 'A' && c <= 'Z')
-        || (c >= '0' && c <= '9');
+    return (c >= '0' && c <= 'z' && (c >= 'a' || 
+                                     c <= '9' || 
+                                     (c >= 'A' && c <= 'Z')))
+        || (c == '.') || (c == '-')
+        || (c == '~') || (c == '_'); 
 }
 
 inline unsigned char unhex(unsigned char c) {
-    if(c >= 'a' && c <= 'f') { return c - 'a' + 10; }
-    if(c >= 'A' && c <= 'F') { return c - 'A' + 10; }
     if(c >= '0' && c <= '9') { return c - '0'; }
+    if(c >= 'A' && c <= 'F') { return c - 'A' + 10; }
+    if(c >= 'a' && c <= 'f') { return c - 'a' + 10; }
 }
 
 inline unsigned char tohex(unsigned char c) {
