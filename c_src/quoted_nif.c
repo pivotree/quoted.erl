@@ -179,9 +179,9 @@ unsigned char tohexlower(unsigned char c) {
 }
 
 static ErlNifFunc nif_funcs[] = {
-    {"is_loaded", 0, unquote_loaded},
+    {"is_native", 0, unquote_loaded},
     {"from_url", 1, unquote_iolist},
     {"to_url", 1, quote_iolist}
 };
 
-ERL_NIF_INIT(quoted_nifs, nif_funcs, NULL, NULL, NULL, NULL)
+ERL_NIF_INIT(quoted, nif_funcs, NULL, NULL, NULL, NULL)

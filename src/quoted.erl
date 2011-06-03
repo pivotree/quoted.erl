@@ -1,9 +1,31 @@
 -module(quoted).
--compile(inline).
+-on_load(load_nif/0).
+-export([is_native/0]).
 -export([to_url/1,
          from_url/1]).
 
+
+
 -type data()    :: [byte()] | binary().
+
+load_nif() ->
+    erlang:load_nif(nif_path(), 0).
+
+-spec nif_path() -> string().
+nif_path() ->
+    So = "quoted",
+    case code:priv_dir(quoted) of
+        {error, bad_name} ->
+            case code:which(?MODULE) of
+                File when not is_list(File) -> filename:join("../priv", So);
+                File -> filename:join([filename:dirname(File),"../priv", So])
+            end;
+         Dir ->
+            filename:join(Dir, So)
+    end.
+
+-spec is_native() -> boolean().
+is_native() -> false.
 
 
 %% @doc
