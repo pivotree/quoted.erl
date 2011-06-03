@@ -30,8 +30,9 @@ unquote_list_to_list([$%,HH,HL|T]) when is_integer(HH), is_integer(HL) ->
     L = unhex(HL),
     C = tobyte(H, L),
     [C|unquote_list_to_list(T)];
-unquote_list_to_list([H|T]) when is_integer(H) ->
-    [H|unquote_list_to_list(T)];
+unquote_list_to_list([AC|T]) when is_integer(AC) ->
+    C = from_url_alias(AC),
+    [C|unquote_list_to_list(T)];
 unquote_list_to_list([]) ->
     [].
 
@@ -46,20 +47,22 @@ unquote_bin_to_bin(<<$%,HH,HL,T/binary>>, Acc) ->
     L = unhex(HL),
     C = tobyte(H, L),
     unquote_bin_to_bin(T, <<Acc/binary, C>>);
-unquote_bin_to_bin(<<C, T/binary>>, Acc) ->
+unquote_bin_to_bin(<<AC, T/binary>>, Acc) ->
+    C = from_url_alias(AC),
     unquote_bin_to_bin(T, <<Acc/binary, C>>);
 unquote_bin_to_bin(<<>>, Acc) ->
     Acc.
 
 
 -spec quote_list_to_list([byte()]) -> [byte()].
-quote_list_to_list([C|T]) ->
-    case is_url_safe(C) of
+quote_list_to_list([AC|T]) ->
+    case is_url_safe(AC) of
         true ->
+            C = to_url_alias(AC),
             [C|quote_list_to_list(T)];
         false ->
-            H = tohex(highbits(C)),
-            L = tohex(lowbits(C)),
+            H = tohex(highbits(AC)),
+            L = tohex(lowbits(AC)),
             [$%,H,L|quote_list_to_list(T)]
     end;
 quote_list_to_list([]) ->
@@ -71,13 +74,14 @@ quote_bin_to_bin(Bin) when is_binary(Bin) ->
     quote_bin_to_bin(Bin, <<>>).
 
 -spec quote_bin_to_bin(binary(), binary()) -> binary().
-quote_bin_to_bin(<<C, T/binary>>, Acc) ->
-    case is_url_safe(C) of
+quote_bin_to_bin(<<AC, T/binary>>, Acc) ->
+    case is_url_safe(AC) of
         true ->
+            C = to_url_alias(AC),
             quote_bin_to_bin(T, <<Acc/binary, C>>);
         false ->
-            H = tohex(highbits(C)),
-            L = tohex(lowbits(C)),
+            H = tohex(highbits(AC)),
+            L = tohex(lowbits(AC)),
             quote_bin_to_bin(T, <<Acc/binary, $%, H, L>>)
     end;
 quote_bin_to_bin(<<>>, Acc) ->
@@ -158,6 +162,22 @@ is_url_safe(C) ->
         $5 -> true; $6 -> true; $7 -> true; $8 -> true; $9 -> true;
         %% Exceptions
         $. -> true; $- -> true; $~ -> true; $_ -> true;
+        %% With aliases
+        $\ -> true;
         %% Unsafe
         _ -> false
+    end.
+
+-spec to_url_alias(byte()) -> byte().
+to_url_alias(C) ->
+    case C of
+        $\  -> $+;
+        _   -> C
+    end.
+
+-spec from_url_alias(byte()) -> byte().
+from_url_alias(C) ->
+    case C of
+        $+ -> $\ ;
+        _  -> C
     end.
