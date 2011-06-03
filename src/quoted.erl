@@ -1,8 +1,13 @@
 -module(quoted).
 -on_load(load_nif/0).
--export([is_native/0]).
+
+%% exported functions
 -export([to_url/1,
          from_url/1]).
+
+%% internal functions
+-export([to_url_/1, from_url_/1]).
+-export([is_native/0]).
 
 
 
@@ -31,18 +36,24 @@ is_native() -> false.
 %% @doc
 %% @end
 -spec to_url(data()) -> data().
-to_url(Str) when is_list(Str) ->
+to_url(Data) ->
+    to_url_(Data).
+
+to_url_(Str) when is_list(Str) ->
     quote_list_to_list(Str);
-to_url(Bin) when is_binary(Bin) ->
+to_url_(Bin) when is_binary(Bin) ->
     quote_bin_to_bin(Bin).
 
 
 %% @doc
 %% @end
 -spec from_url(data()) -> data().
-from_url(Str) when is_list(Str) ->
+from_url(Data) ->
+    from_url_(Data).
+
+from_url_(Str) when is_list(Str) ->
     unquote_list_to_list(Str);
-from_url(Bin) when is_binary(Bin) ->
+from_url_(Bin) when is_binary(Bin) ->
     unquote_bin_to_bin(Bin).
 
 
