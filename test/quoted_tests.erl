@@ -6,15 +6,28 @@
 -endif.
 -define(q, quoted).
 
+% Library behaviour:
+%   " "<->"%20"
+%   " "<--"+"
+%
+% Simple and more according to standard, but still supports the popular +
+% encoding.
 space_char_test_() ->
+    % " "<--"%20"
     [?_assertEqual(" ", ?q:to_list("%20")),
      ?_assertEqual(" ", ?q:to_list(<<"%20">>)),
      ?_assertEqual(<<" ">>, ?q:to_binary("%20")),
      ?_assertEqual(<<" ">>, ?q:to_binary(<<"%20">>)),
+    % " "<--"+"
+     ?_assertEqual(" ", ?q:to_list("+")),
+     ?_assertEqual(" ", ?q:to_list(<<"+">>)),
+     ?_assertEqual(<<" ">>, ?q:to_binary("+")),
+     ?_assertEqual(<<" ">>, ?q:to_binary(<<"+">>)),
+    % " "-->"%20" 
      ?_assertEqual("%20", ?q:as_list(" ")),
      ?_assertEqual("%20", ?q:as_list(<<" ">>)),
      ?_assertEqual(<<"%20">>, ?q:as_binary(" ")),
-     ?_assertEqual(<<"%20">>, ?q:as_binary(" "))].
+     ?_assertEqual(<<"%20">>, ?q:as_binary(<<" ">>))].
 
 -ifdef(PROPER).
 
