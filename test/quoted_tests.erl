@@ -14,20 +14,14 @@
 % encoding.
 space_char_test_() ->
     % " "<--"%20"
-    [?_assertEqual(" ", ?q:to_list("%20")),
-     ?_assertEqual(" ", ?q:to_list(<<"%20">>)),
-     ?_assertEqual(<<" ">>, ?q:to_binary("%20")),
-     ?_assertEqual(<<" ">>, ?q:to_binary(<<"%20">>)),
+    [?_assertEqual(" ", ?q:from_url("%20")),
+     ?_assertEqual(<<" ">>, ?q:from_url(<<"%20">>)),
     % " "<--"+"
-     ?_assertEqual(" ", ?q:to_list("+")),
-     ?_assertEqual(" ", ?q:to_list(<<"+">>)),
-     ?_assertEqual(<<" ">>, ?q:to_binary("+")),
-     ?_assertEqual(<<" ">>, ?q:to_binary(<<"+">>)),
+     ?_assertEqual(" ", ?q:from_url("+")),
+     ?_assertEqual(<<" ">>, ?q:from_url(<<"+">>)),
     % " "-->"%20" 
-     ?_assertEqual("%20", ?q:as_list(" ")),
-     ?_assertEqual("%20", ?q:as_list(<<" ">>)),
-     ?_assertEqual(<<"%20">>, ?q:as_binary(" ")),
-     ?_assertEqual(<<"%20">>, ?q:as_binary(<<" ">>))].
+     ?_assertEqual("%20", ?q:to_url(" ")),
+     ?_assertEqual(<<"%20">>, ?q:to_url(<<" ">>))].
 
 -ifdef(PROPER).
 
@@ -37,8 +31,8 @@ bstring() ->
 list_inv_prop() ->
     ?FORALL(Input, bstring(),
     begin
-        Quoted = ?q:as_list(Input),
-        Unquoted = ?q:to_list(Quoted),
+        Quoted = ?q:to_url(Input),
+        Unquoted = ?q:from_url(Quoted),
         Unquoted == Input
     end).
 
@@ -46,32 +40,12 @@ bin_inv_prop() ->
     ?FORALL(Initinput, bstring(),
     begin
         Input = list_to_binary(Initinput),
-        Quoted = ?q:as_binary(Input),
-        Unquoted = ?q:to_binary(Quoted),
+        Quoted = ?q:to_url(Input),
+        Unquoted = ?q:from_url(Quoted),
         Unquoted == Input
     end).
-
-list_via_bin_inv_prop() ->
-    ?FORALL(Input, bstring(),
-    begin
-        Quoted = ?q:as_binary(Input),
-        Unquoted = ?q:to_list(Quoted),
-        Unquoted == Input
-    end).
-
-bin_via_list_inv_prop() ->
-    ?FORALL(Initinput, bstring(),
-    begin
-        Input = list_to_binary(Initinput),
-        Quoted = ?q:as_list(Input),
-        Unquoted = ?q:to_binary(Quoted),
-        Unquoted == Input
-    end).
-
 
 list_inv_test() -> ?assert(proper:quickcheck(list_inv_prop())).
 bin_inv_test() -> ?assert(proper:quickcheck(bin_inv_prop())).
-list_via_bin_inv_test() -> ?assert(proper:quickcheck(list_via_bin_inv_prop())).
-bin_via_list_inv_test() -> ?assert(proper:quickcheck(bin_via_list_inv_prop())).
 
 -endif.
